@@ -10,7 +10,9 @@ export function HeroSection() {
     <div className="flex flex-col items-center justify-center gap-4 pt-8 pb-4">
       {/* Ethereum logo with enhanced glow effects */}
       <div
-        className="relative group "
+        className="relative group"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
       >
         <div
           className={`absolute inset-0 bg-emerald-400/15 md:bg-emerald-400/20 lg:bg-emerald-400/30 blur-3xl rounded-full transition-all duration-700 ${
