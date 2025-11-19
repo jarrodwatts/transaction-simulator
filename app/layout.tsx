@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { Providers } from "@/components/Providers";
 import { APP_METADATA } from "@/constants/app-config";
-import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,7 +37,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   );

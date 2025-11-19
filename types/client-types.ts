@@ -1,6 +1,5 @@
 import { Account } from "viem/accounts";
-import { WalletClient, PublicClient } from "viem";
-import { Eip712Actions } from "viem/zksync";
+import { WalletClient, PublicClient, Client } from "viem";
 
 /**
  * Type definitions for wallet and public clients used in benchmarking
@@ -9,17 +8,12 @@ import { Eip712Actions } from "viem/zksync";
 /**
  * Extended wallet client with EIP-712 support for zkSync transactions
  */
-export type ExtendedWalletClient = WalletClient & Eip712Actions;
+export type ExtendedWalletClient = any;
 
 /**
  * Extended public client with L2-specific actions
  */
-export type ExtendedPublicClient = PublicClient & {
-  sendRawTransactionSync: (args: { serializedTransaction: `0x${string}` }) => Promise<{
-    transactionHash: string;
-    [key: string]: unknown;
-  }>;
-};
+export type ExtendedPublicClient = any;
 
 /**
  * Transaction clients bundle used for running benchmarks

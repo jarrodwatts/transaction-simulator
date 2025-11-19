@@ -5,8 +5,8 @@ export function useAnimatedCounter(
   duration: number = 300
 ): number {
   const [displayValue, setDisplayValue] = useState(targetValue);
-  const rafRef = useRef<number>();
-  const startTimeRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
+  const startTimeRef = useRef<number | undefined>(undefined);
   const startValueRef = useRef(targetValue);
 
   useEffect(() => {
