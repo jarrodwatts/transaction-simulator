@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { RPCCallLog } from "@/lib/instrumented-transport";
 import { createBenchmarkClients } from "@/lib/benchmark-clients";
-import { runAsyncTransaction, runSyncTransaction } from "@/lib/benchmark-runner";
+import { runAsyncTransaction, runSyncTransaction, PrefetchOptions } from "@/lib/benchmark-runner";
 import { BenchmarkResult } from "@/types/benchmark";
 import { ResultCard } from "./ResultCard";
 import { ShimmerButton } from "./ui/shimmer-button";
+import { PrefetchControlPanel } from "./PrefetchControlPanel";
 
 // Partial result that updates in real-time
 interface PartialResult {
@@ -25,9 +26,14 @@ export function TransactionBenchmark() {
   const [syncPartial, setSyncPartial] = useState<PartialResult | null>(null);
   const [asyncElapsed, setAsyncElapsed] = useState(0);
   const [syncElapsed, setSyncElapsed] = useState(0);
+  const [prefetchOptions, setPrefetchOptions] = useState<PrefetchOptions>({
+    nonce: false,
+    gasParams: false,
+    chainId: false,
+  });
   
-  const asyncTimerRef = useRef<NodeJS.Timeout>();
-  const syncTimerRef = useRef<NodeJS.Timeout>();
+  const asyncTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const syncTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const runBenchmark = async () => {
     setIsRunning(true);
@@ -74,16 +80,20 @@ export function TransactionBenchmark() {
     const asyncClients = createBenchmarkClients(asyncAccount, (log) => {
       asyncRPCCalls.push(log);
       setAsyncPartial(prev => prev ? { ...prev, rpcCalls: [...asyncRPCCalls] } : null);
-    });
+    }, prefetchOptions.chainId);
     
     // Create clients for sync transaction with its own account
     const syncClients = createBenchmarkClients(syncAccount, (log) => {
       syncRPCCalls.push(log);
       setSyncPartial(prev => prev ? { ...prev, rpcCalls: [...syncRPCCalls] } : null);
-    });
+    }, prefetchOptions.chainId);
 
-    // Get starting nonces for each account independently
-    const [asyncNonce, syncNonce] = await Promise.all([
+    // Get starting nonces for each account independently (only if pre-fetch is enabled)
+    let asyncNonce = 0;
+    let syncNonce = 0;
+    
+    if (prefetchOptions.nonce) {
+      [asyncNonce, syncNonce] = await Promise.all([
       asyncClients.publicClient.getTransactionCount({
         address: asyncAccount.address,
       }),
@@ -91,13 +101,15 @@ export function TransactionBenchmark() {
         address: syncAccount.address,
       }),
     ]);
+    }
 
     // Run both transactions in parallel with no dependencies
     // Track completion time for each individually and stop their timers
     const asyncPromise = runAsyncTransaction(
       { ...asyncClients, account: asyncAccount },
       asyncNonce,
-      asyncRPCCalls
+      asyncRPCCalls,
+      prefetchOptions
     ).then(res => {
       const duration = Date.now() - asyncStartTime;
       const finalResult = { ...res, duration };
@@ -112,7 +124,8 @@ export function TransactionBenchmark() {
     const syncPromise = runSyncTransaction(
       { ...syncClients, account: syncAccount },
       syncNonce,
-      syncRPCCalls
+      syncRPCCalls,
+      prefetchOptions
     ).then(res => {
       const duration = Date.now() - syncStartTime;
       const finalResult = { ...res, duration };
@@ -134,6 +147,12 @@ export function TransactionBenchmark() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col items-center gap-8">
+        <PrefetchControlPanel
+          options={prefetchOptions}
+          onChange={setPrefetchOptions}
+          disabled={isRunning}
+        />
+        
         <div className="grid md:grid-cols-2 gap-6 w-full">
           <ResultCard 
             result={asyncResult} 
