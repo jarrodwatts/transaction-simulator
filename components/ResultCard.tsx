@@ -3,14 +3,14 @@ import { PartialResult } from "@/types/partial-result";
 import { RPCCallLog } from "@/lib/instrumented-transport";
 import { useAnimatedCounter } from "@/hooks/use-animated-counter";
 import { truncateHash } from "@/lib/format-utils";
-import { MOCK_ASYNC_CALLS, MOCK_SYNC_CALLS } from "@/constants/mock-data";
+import { getMockCalls } from "@/constants/mock-data";
 import { APP_CONFIG } from "@/constants/app-config";
 
 interface ResultCardProps {
   result: BenchmarkResult | null;
   isRunning: boolean;
   isPreparing?: boolean;
-  type: "async" | "sync";
+  syncMode: boolean;
   partialResult?: PartialResult | null;
   elapsedTime?: number;
 }
@@ -69,29 +69,27 @@ export function ResultCard({
   result, 
   isRunning, 
   isPreparing = false, 
-  type, 
+  syncMode,
   partialResult, 
   elapsedTime = 0 
 }: ResultCardProps) {
-  const isAsync = type === "async";
-  const title = isAsync ? "Async Transaction" : "Sync Transaction (EIP-7966)";
-  const subtitle = isAsync 
-    ? "sendTransaction + waitForTransactionReceipt" 
-    : "sendRawTransactionSync";
+  const title = "Transaction Result";
+  const subtitle = syncMode 
+    ? "Using eth_sendRawTransactionSync" 
+    : "Using sendTransaction + waitForTransactionReceipt";
 
   // Determine what to display
   const isLiveRunning = isRunning && partialResult;
-  const displayCalls = result?.rpcCalls || partialResult?.rpcCalls || (isAsync ? MOCK_ASYNC_CALLS : MOCK_SYNC_CALLS);
+  const displayCalls = result?.rpcCalls || partialResult?.rpcCalls || getMockCalls(syncMode);
   const totalDuration = displayCalls.reduce((sum, call) => sum + call.duration, 0);
   const showMockData = !result && !isRunning && !partialResult && !isPreparing;
   const displayElapsedTime = isLiveRunning ? elapsedTime : result?.duration;
   
   // Use animated counter for the total duration and RPC time
   const animatedDuration = useAnimatedCounter(displayElapsedTime || 0, APP_CONFIG.COUNTER_ANIMATION_DURATION);
-  const animatedTotalRPCTime = useAnimatedCounter(totalDuration, APP_CONFIG.COUNTER_ANIMATION_DURATION);
 
   return (
-    <div className={`flex flex-col min-h-[600px] p-6 bg-zinc-900/50 border border-zinc-800 rounded-lg transition-all duration-500 ${
+    <div className={`w-full flex flex-col min-h-[500px] p-6 bg-zinc-900/50 border border-zinc-800 rounded-lg transition-all duration-500 ${
       showMockData ? 'animate-fade-in' : ''
     }`}>
       <div className="flex items-start justify-between mb-4">
@@ -138,7 +136,7 @@ export function ResultCard({
             <p className="text-sm text-zinc-400 mb-2">RPC Call Breakdown</p>
             <div className="flex items-center justify-center py-8">
               <p className="text-sm text-blue-400 font-medium animate-pulse">
-                Setting up wallets and fetching parameters...
+                Setting up wallet and fetching parameters...
               </p>
             </div>
           </div>
@@ -168,6 +166,16 @@ export function ResultCard({
                       isLiveRunning={!!isLiveRunning}
                     />
                   ))}
+                </div>
+              </div>
+
+              {/* RPC Call Count Summary */}
+              <div className="py-2 border-t border-zinc-700/50 mb-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-400">Total RPC Calls</span>
+                  <span className={`font-mono ${showMockData ? 'text-zinc-500' : 'text-zinc-300'}`}>
+                    {displayCalls.length}
+                  </span>
                 </div>
               </div>
 
@@ -211,4 +219,3 @@ export function ResultCard({
     </div>
   );
 }
-

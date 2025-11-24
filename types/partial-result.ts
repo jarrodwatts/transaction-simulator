@@ -5,9 +5,8 @@ import { RPCCallLog } from "@/lib/instrumented-transport";
  * Used to display live updates while transactions are in progress
  */
 export interface PartialResult {
-  type: "async" | "sync";
   startTime: number;
   rpcCalls: RPCCallLog[];
   isComplete: boolean;
+  syncMode: boolean;
 }
-

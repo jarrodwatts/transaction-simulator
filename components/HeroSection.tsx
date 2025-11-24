@@ -49,12 +49,12 @@ export function HeroSection() {
 
       {/* Title */}
       <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent leading-tight">
-        EIP-7966 Synchronous Transactions
+        Transaction Simulator
       </h1>
 
       {/* Subtitle */}
       <p className="text-sm md:text-base text-zinc-400 text-center max-w-2xl px-4 leading-snug">
-        A demo showcasing the <code>eth_sendRawTransactionSync</code> method on Abstract{" "}
+        Explore the RPC calls that occur when sending a transaction on Abstract
       </p>
     </div>
   );

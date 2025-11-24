@@ -20,8 +20,8 @@ export const APP_CONFIG = {
 } as const;
 
 export const APP_METADATA = {
-  title: "EIP-7966 Synchronous Transactions",
-  description: "A demo of the eth_sendRawTransactionSync Method on Abstract",
-  appName: "EIP-7966 Demo",
+  title: "Transaction Simulator",
+  description: "Explore the RPC calls that occur when sending a transaction on Abstract",
+  appName: "Transaction Simulator",
 } as const;
 

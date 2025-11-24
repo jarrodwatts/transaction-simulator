@@ -4,55 +4,78 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
 
-export interface PrefetchOptions {
+export interface TransactionOptions {
   nonce: boolean;
   gasParams: boolean;
   chainId: boolean;
+  syncMode: boolean;
 }
 
-interface PrefetchControlPanelProps {
-  options: PrefetchOptions;
-  onChange: (options: PrefetchOptions) => void;
+interface SettingsControlPanelProps {
+  options: TransactionOptions;
+  onChange: (options: TransactionOptions) => void;
   disabled?: boolean;
 }
 
-export function PrefetchControlPanel({ 
+export function SettingsControlPanel({ 
   options, 
   onChange, 
   disabled = false 
-}: PrefetchControlPanelProps) {
-  const handleToggle = (key: keyof PrefetchOptions) => {
+}: SettingsControlPanelProps) {
+  const handleToggle = (key: keyof TransactionOptions) => {
     onChange({ ...options, [key]: !options[key] });
   };
 
   return (
     <div className="w-full p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg">
-      <div className="flex items-center justify-between gap-8">
+      <div className="flex flex-col gap-4">
+        {/* Header */}
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-white">Pre-fetch Options</h3>
+          <h3 className="text-sm font-semibold text-white">Transaction Settings</h3>
           <div className="group relative">
             <Info className="w-3.5 h-3.5 text-zinc-500 cursor-help hover:text-zinc-400 transition-colors" />
             <div className="absolute left-0 top-6 w-80 p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none z-10 shadow-xl">
-              <p className="mb-2 font-semibold text-white">What is pre-fetching?</p>
+              <p className="mb-2 font-semibold text-white">How does this work?</p>
               <p className="mb-2">
-                Pre-fetching means fetching transaction parameters (nonce, gas prices, chain ID) <span className="text-emerald-400">before</span> sending the transaction.
+                Toggle settings to see how different configurations affect the RPC calls made during a transaction.
+              </p>
+              <p className="mb-2">
+                <span className="text-emerald-400 font-semibold">Pre-fetch options:</span> When enabled, parameters are fetched before sending, reducing RPC calls during execution.
               </p>
               <p>
-                When disabled, these values are fetched <span className="text-red-400">during</span> transaction execution, adding extra RPC calls and latency. Toggle options to see the performance difference!
+                <span className="text-emerald-400 font-semibold">Sync Mode:</span> Uses <code className="bg-zinc-700 px-1 rounded">eth_sendRawTransactionSync</code> which waits for inclusion instead of polling.
               </p>
             </div>
           </div>
-          <span className="hidden sm:inline text-xs text-zinc-500">Toggle to see latency impact</span>
         </div>
         
-        <div className="flex items-center gap-6">
+        {/* Toggle Controls */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {/* Sync Mode Toggle */}
+          <div className="flex items-center gap-2">
+            <Label 
+              htmlFor="sync-toggle" 
+              className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
+            >
+              Sync Mode
+            </Label>
+            <Switch 
+              id="sync-toggle"
+              checked={options.syncMode}
+              onCheckedChange={() => handleToggle("syncMode")}
+              disabled={disabled}
+            />
+          </div>
+
+          <div className="hidden sm:block w-px h-4 bg-zinc-700" />
+
           {/* Nonce Toggle */}
           <div className="flex items-center gap-2">
             <Label 
               htmlFor="nonce-toggle" 
               className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
             >
-              Nonce
+              Pre-fetch Nonce
             </Label>
             <Switch 
               id="nonce-toggle"
@@ -68,7 +91,7 @@ export function PrefetchControlPanel({
               htmlFor="gas-toggle" 
               className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
             >
-              Gas Params
+              Pre-fetch Gas
             </Label>
             <Switch 
               id="gas-toggle"
@@ -84,7 +107,7 @@ export function PrefetchControlPanel({
               htmlFor="chain-toggle" 
               className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
             >
-              Chain ID
+              Pre-fetch Chain ID
             </Label>
             <Switch 
               id="chain-toggle"
@@ -98,4 +121,3 @@ export function PrefetchControlPanel({
     </div>
   );
 }
-
