@@ -3,77 +3,37 @@
 import { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
-import { 
-  abstractTestnet, 
-  megaethTestnet, 
-  monadTestnet, 
-  baseSepolia, 
-  sepolia,
-  // Add common testnets users might search for
-  arbitrumSepolia,
-  optimismSepolia,
-  polygonAmoy,
-  avalancheFuji,
-  bscTestnet,
-  lineaSepolia,
-  scrollSepolia,
-  zkSyncSepoliaTestnet,
-  mantleSepoliaTestnet,
-  blastSepolia,
-  // Add some mainnets too
-  mainnet,
-  arbitrum,
-  optimism,
-  polygon,
-  avalanche,
-  bsc,
-  base,
-  linea,
-  scroll,
-  zkSync,
-  mantle,
-  blast,
-} from "viem/chains";
 import { RainbowKitProvider, darkTheme, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
+import { getAllViemChains, DEFAULT_CHAIN, FEATURED_CHAINS } from "@/config/chains";
+import type { Chain } from "viem";
+
+// Get all chains from viem
+const allViemChains = getAllViemChains();
+
+// Get the IDs of our featured chains (which may have custom overrides)
+const featuredChainIds = new Set(FEATURED_CHAINS.map((c) => c.id));
+
+// Filter out any viem chains that conflict with our featured chains
+// (e.g., the original megaethTestnet if we have a custom override)
+const nonFeaturedChains = allViemChains.filter((c) => !featuredChainIds.has(c.id));
+
+// Combine: featured chains first (with custom overrides), then all other viem chains
+const allChains = [...FEATURED_CHAINS, ...nonFeaturedChains];
+
+// Ensure we have at least one chain (required by wagmi)
+if (allChains.length === 0) {
+  throw new Error("No chains found");
+}
+
+// Type assertion for wagmi's tuple requirement
+const chains = allChains as [Chain, ...Chain[]];
 
 // Configure wagmi with RainbowKit defaults
-// Include featured chains + popular testnets + mainnets
 const config = getDefaultConfig({
   appName: "Transaction Latency Simulator",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
-  chains: [
-    // Featured chains
-    abstractTestnet, 
-    monadTestnet, 
-    megaethTestnet, 
-    baseSepolia, 
-    sepolia,
-    // Popular testnets
-    arbitrumSepolia,
-    optimismSepolia,
-    polygonAmoy,
-    avalancheFuji,
-    bscTestnet,
-    lineaSepolia,
-    scrollSepolia,
-    zkSyncSepoliaTestnet,
-    mantleSepoliaTestnet,
-    blastSepolia,
-    // Mainnets
-    mainnet,
-    arbitrum,
-    optimism,
-    polygon,
-    avalanche,
-    bsc,
-    base,
-    linea,
-    scroll,
-    zkSync,
-    mantle,
-    blast,
-  ],
+  chains,
   ssr: true,
 });
 
@@ -89,6 +49,7 @@ export function Providers({ children }: ProvidersProps) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
+          initialChain={DEFAULT_CHAIN}
           theme={darkTheme({
             accentColor: "#10b981",
             accentColorForeground: "white",
@@ -102,4 +63,3 @@ export function Providers({ children }: ProvidersProps) {
     </WagmiProvider>
   );
 }
-

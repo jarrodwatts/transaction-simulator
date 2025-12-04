@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  turbopack: {}, // Silence Turbopack warning by explicitly acknowledging it
   webpack: (config) => {
     // Handle WalletConnect dependencies that use Node.js APIs
     config.resolve.fallback = {

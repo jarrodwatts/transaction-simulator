@@ -1,209 +1,127 @@
 import { Chain, defineChain } from "viem";
-import { abstractTestnet, megaethTestnet, monadTestnet, baseSepolia, sepolia } from "viem/chains";
-import * as allChains from "viem/chains";
+import {
+  abstractTestnet,
+  megaethTestnet as baseMegaethTestnet,
+  monadTestnet,
+  baseSepolia,
+  sepolia,
+} from "viem/chains";
+import * as allViemChains from "viem/chains";
+
+// Override megaethTestnet with custom RPC URL and chain ID
+const megaethTestnet = defineChain({
+  ...baseMegaethTestnet,
+  id: 6343,
+  rpcUrls: {
+    default: {
+      http: ["https://timothy.megaeth.com/rpc"],
+    },
+  },
+});
 
 /**
- * Look up a chain by ID from viem's chain definitions
+ * Featured chains shown in the chain selector
  */
-export function getViemChainById(chainId: number): Chain | undefined {
-  return Object.values(allChains).find(
-    (chain): chain is Chain => 
-      typeof chain === 'object' && 
-      chain !== null && 
-      'id' in chain && 
-      chain.id === chainId
+export const FEATURED_CHAINS: Chain[] = [
+  abstractTestnet,
+  monadTestnet,
+  megaethTestnet,
+  baseSepolia,
+  sepolia,
+];
+
+/**
+ * UI metadata for chains (logo, accent color, short name)
+ */
+export interface ChainUI {
+  logo: string;
+  accentColor: string;
+  shortName: string;
+}
+
+const CHAIN_UI_MAP: Record<number, ChainUI> = {
+  [abstractTestnet.id]: { logo: "/abs.png", accentColor: "#10b981", shortName: "Abstract Sepolia" },
+  [monadTestnet.id]: { logo: "/monad.png", accentColor: "#a855f7", shortName: "Monad Testnet" },
+  [megaethTestnet.id]: { logo: "/megaeth.png", accentColor: "#f59e0b", shortName: "MegaETH Testnet" },
+  [baseSepolia.id]: { logo: "/base.svg", accentColor: "#0052FF", shortName: "Base Sepolia" },
+  [sepolia.id]: { logo: "/eth.svg", accentColor: "#627EEA", shortName: "Sepolia" },
+};
+
+const DEFAULT_UI: ChainUI = {
+  logo: "/custom-chain.svg",
+  accentColor: "#6366f1",
+  shortName: "Unknown",
+};
+
+/**
+ * Get UI metadata for a chain
+ */
+export function getChainUI(chainId: number): ChainUI {
+  return CHAIN_UI_MAP[chainId] ?? { ...DEFAULT_UI, shortName: `Chain ${chainId}` };
+}
+
+/**
+ * Known zkSync stack chain IDs that need special transaction handling
+ * Source: https://github.com/wevm/viem
+ */
+const ZKSYNC_CHAIN_IDS: Set<number> = new Set([
+  324,       // zkSync Era Mainnet
+  300,       // zkSync Sepolia
+  302,       // zkSync Goerli
+  11124,     // Abstract Testnet
+  282,       // Cronos zkEVM
+  388,       // Cronos zkEVM Mainnet
+  4654,      // Gold Chain
+  333271,    // Camp Testnet
+  37111,     // Lens Testnet
+  978658,    // Treasure Ruby
+  531050104, // Sophon
+  4457845,   // Zero Network
+  2741,      // Abstract Mainnet
+  240,       // Blast zkEVM
+  555271,    // Xsolla zkEVM
+  61166,     // Treasure
+  555272,    // Xsolla zkEVM Mainnet
+]);
+
+// Local dev chain IDs that should never be treated as zkSync
+const LOCAL_CHAIN_IDS: Set<number> = new Set([1337, 31337]);
+
+export function isZkSyncChain(chainId: number): boolean {
+  if (LOCAL_CHAIN_IDS.has(chainId)) return false;
+  return ZKSYNC_CHAIN_IDS.has(chainId);
+}
+
+/**
+ * Default chain
+ */
+export const DEFAULT_CHAIN = abstractTestnet;
+
+/**
+ * Get all viem chains as an array
+ */
+export function getAllViemChains(): Chain[] {
+  return (Object.values(allViemChains) as unknown[]).filter(
+    (chain): chain is Chain =>
+      typeof chain === "object" &&
+      chain !== null &&
+      "id" in chain &&
+      "name" in chain &&
+      typeof chain.id === "number"
   );
 }
 
 /**
- * Chain feature flags and configuration
+ * Find a chain by ID from viem's definitions or our featured chains
  */
-export interface ChainConfig {
-  id: string;
-  chain: Chain;
-  name: string;
-  shortName: string;
-  logo: string;
-  blockExplorerUrl: string;
-  faucetUrl?: string;
-  // Feature flags
-  supportsPaymaster: boolean;
-  supportsSyncMode: boolean;
-  isZkSync: boolean;
-  /** Whether this chain requires a connected wallet (false = can use sponsored local account) */
-  requiresWallet: boolean;
-  // Branding
-  accentColor: string;
+export function getChainById(chainId: number): Chain | undefined {
+  // Check featured chains first (includes our overrides like megaETH)
+  const featured = FEATURED_CHAINS.find((c) => c.id === chainId);
+  if (featured) return featured;
+
+  // Fall back to all viem chains
+  return getAllViemChains().find((c) => c.id === chainId);
 }
 
-/**
- * Supported chains configuration
- */
-export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
-  abstract: {
-    id: "abstract",
-    chain: abstractTestnet,
-    name: "Abstract Testnet",
-    shortName: "Abstract",
-    logo: "/abs.png",
-    blockExplorerUrl: "https://sepolia.abscan.org",
-    faucetUrl: "https://faucet.abs.xyz",
-    supportsPaymaster: true,
-    supportsSyncMode: true,
-    isZkSync: true,
-    requiresWallet: false, // Abstract can use sponsored local account
-    accentColor: "#10b981", // emerald
-  },
-  monad: {
-    id: "monad",
-    chain: monadTestnet,
-    name: "Monad Testnet",
-    shortName: "Monad",
-    logo: "/monad.png",
-    blockExplorerUrl: "https://testnet.monadscan.com",
-    faucetUrl: "https://faucet.monad.xyz",
-    supportsPaymaster: false,
-    supportsSyncMode: false,
-    isZkSync: false,
-    requiresWallet: true,
-    accentColor: "#a855f7", // purple
-  },
-  megaeth: {
-    id: "megaeth",
-    chain: megaethTestnet,
-    name: "MegaETH Testnet",
-    shortName: "MegaETH",
-    logo: "/megaeth.png",
-    blockExplorerUrl: "https://megaexplorer.xyz",
-    faucetUrl: "https://faucet.megaeth.xyz",
-    supportsPaymaster: false,
-    supportsSyncMode: false,
-    isZkSync: false,
-    requiresWallet: true,
-    accentColor: "#f59e0b", // amber
-  },
-  baseSepolia: {
-    id: "baseSepolia",
-    chain: baseSepolia,
-    name: "Base Sepolia",
-    shortName: "Base",
-    logo: "/base.svg",
-    blockExplorerUrl: "https://sepolia.basescan.org",
-    faucetUrl: "https://www.alchemy.com/faucets/base-sepolia",
-    supportsPaymaster: false,
-    supportsSyncMode: false,
-    isZkSync: false,
-    requiresWallet: true,
-    accentColor: "#0052FF", // Base blue
-  },
-  sepolia: {
-    id: "sepolia",
-    chain: sepolia,
-    name: "Ethereum Sepolia",
-    shortName: "Sepolia",
-    logo: "/eth.svg",
-    blockExplorerUrl: "https://sepolia.etherscan.io",
-    faucetUrl: "https://www.alchemy.com/faucets/ethereum-sepolia",
-    supportsPaymaster: false,
-    supportsSyncMode: false,
-    isZkSync: false,
-    requiresWallet: true,
-    accentColor: "#627EEA", // Ethereum blue
-  },
-} as const;
-
-/**
- * Custom chain ID for user-provided RPC
- */
-export const CUSTOM_CHAIN_ID = "custom";
-
-/**
- * Create a custom chain config from RPC URL and detected chain ID
- * Attempts to look up chain info from viem's chain definitions for proper naming
- */
-export function createCustomChainConfig(
-  rpcUrl: string,
-  chainId: number
-): ChainConfig {
-  // Try to find the chain in viem's definitions
-  const knownChain = getViemChainById(chainId);
-  
-  const chainName = knownChain?.name || `Custom Chain (${chainId})`;
-  const nativeCurrency = knownChain?.nativeCurrency || {
-    name: "Ether",
-    symbol: "ETH",
-    decimals: 18,
-  };
-  const blockExplorer = knownChain?.blockExplorers?.default?.url || "";
-  
-  // Create the chain with the custom RPC but use known chain info if available
-  const customChain = defineChain({
-    id: chainId,
-    name: chainName,
-    nativeCurrency,
-    rpcUrls: {
-      default: {
-        http: [rpcUrl],
-      },
-    },
-    blockExplorers: knownChain?.blockExplorers,
-  });
-
-  return {
-    id: CUSTOM_CHAIN_ID,
-    chain: customChain,
-    name: chainName,
-    shortName: knownChain ? chainName.split(' ')[0] : "Custom", // First word of name or "Custom"
-    logo: "/custom-chain.svg",
-    blockExplorerUrl: blockExplorer,
-    supportsPaymaster: false,
-    supportsSyncMode: false,
-    isZkSync: false,
-    requiresWallet: true,
-    accentColor: "#6366f1", // indigo
-  };
-}
-
-/**
- * Get chain metadata for adding to wallet (wallet_addEthereumChain)
- */
-export function getChainMetadataForWallet(rpcUrl: string, chainId: number) {
-  const knownChain = getViemChainById(chainId);
-  
-  return {
-    chainId: `0x${chainId.toString(16)}`,
-    chainName: knownChain?.name || `Custom Chain (${chainId})`,
-    nativeCurrency: knownChain?.nativeCurrency || {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: [rpcUrl],
-    blockExplorerUrls: knownChain?.blockExplorers?.default?.url 
-      ? [knownChain.blockExplorers.default.url] 
-      : undefined,
-  };
-}
-
-/**
- * Default chain ID
- */
-export const DEFAULT_CHAIN_ID = "abstract";
-
-/**
- * Get chain config by ID
- */
-export function getChainConfig(chainId: string): ChainConfig {
-  const config = CHAIN_CONFIGS[chainId];
-  if (!config) {
-    throw new Error(`Unknown chain: ${chainId}`);
-  }
-  return config;
-}
-
-/**
- * Get all supported chain IDs
- */
-export function getSupportedChainIds(): string[] {
-  return Object.keys(CHAIN_CONFIGS);
-}
+// Re-export the custom megaethTestnet for direct use
+export { megaethTestnet };

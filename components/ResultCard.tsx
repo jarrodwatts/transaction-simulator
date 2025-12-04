@@ -1,3 +1,4 @@
+import { Chain } from "viem";
 import { BenchmarkResult } from "@/types/benchmark";
 import { PartialResult } from "@/types/partial-result";
 import { RPCCallLog } from "@/lib/instrumented-transport";
@@ -5,7 +6,7 @@ import { useAnimatedCounter } from "@/hooks/use-animated-counter";
 import { truncateHash } from "@/lib/format-utils";
 import { getMockCalls } from "@/constants/mock-data";
 import { APP_CONFIG } from "@/constants/app-config";
-import { ChainConfig } from "@/config/chains";
+import { getChainUI } from "@/config/chains";
 
 interface ResultCardProps {
   result: BenchmarkResult | null;
@@ -16,84 +17,91 @@ interface ResultCardProps {
   syncMode: boolean;
   partialResult?: PartialResult | null;
   elapsedTime?: number;
-  chainConfig: ChainConfig;
+  chain: Chain;
 }
 
 /**
  * Component for displaying an individual RPC call with animated duration
  */
-function RPCCallRow({ 
-  call, 
-  showMockData, 
+function RPCCallRow({
+  call,
+  showMockData,
   isLiveRunning,
   accentColor,
-}: { 
-  call: RPCCallLog; 
-  showMockData: boolean; 
+}: {
+  call: RPCCallLog;
+  showMockData: boolean;
   isLiveRunning: boolean;
   accentColor: string;
 }) {
   const animatedDuration = useAnimatedCounter(call.duration, APP_CONFIG.COUNTER_ANIMATION_DURATION);
   const isSyncMethod = call.method === "eth_sendRawTransactionSync";
   const isPending = call.isPending === true;
-  
+
   return (
     <div
       className={`flex items-center justify-between text-xs rounded px-2 py-1 transition-all duration-300 min-h-[24px] border ${
-        showMockData 
-          ? 'bg-zinc-800/30 border-transparent' 
+        showMockData
+          ? "bg-zinc-800/30 border-transparent"
           : isPending
-            ? 'bg-yellow-500/10 border-yellow-500/30'
+            ? "bg-yellow-500/10 border-yellow-500/30"
             : isSyncMethod
-              ? 'bg-emerald-500/10 border-emerald-500/20'
+              ? "bg-emerald-500/10 border-emerald-500/20"
               : isLiveRunning
-                ? 'bg-emerald-500/10 border-emerald-500/30'
-                : 'bg-zinc-800/50 border-transparent'
+                ? "bg-emerald-500/10 border-emerald-500/30"
+                : "bg-zinc-800/50 border-transparent"
       }`}
-      style={isLiveRunning && !isPending && !showMockData ? {
-        backgroundColor: `${accentColor}15`,
-        borderColor: `${accentColor}30`,
-      } : undefined}
+      style={
+        isLiveRunning && !isPending && !showMockData
+          ? {
+              backgroundColor: `${accentColor}15`,
+              borderColor: `${accentColor}30`,
+            }
+          : undefined
+      }
     >
-      <span className={`font-mono transition-colors duration-300 ${showMockData ? 'text-zinc-400' : isPending ? 'text-yellow-300' : isLiveRunning ? 'text-zinc-300' : 'text-zinc-300'}`}>
+      <span
+        className={`font-mono transition-colors duration-300 ${showMockData ? "text-zinc-400" : isPending ? "text-yellow-300" : isLiveRunning ? "text-zinc-300" : "text-zinc-300"}`}
+      >
         {call.method}
       </span>
-      <span 
+      <span
         className={`font-mono transition-colors duration-300 text-right min-w-[50px] inline-block ${
-          showMockData 
-            ? 'text-zinc-500' 
+          showMockData
+            ? "text-zinc-500"
             : isPending
-              ? 'text-yellow-400 animate-pulse'
+              ? "text-yellow-400 animate-pulse"
               : isSyncMethod
-                ? 'text-emerald-300 font-semibold'
+                ? "text-emerald-300 font-semibold"
                 : isLiveRunning
-                  ? 'text-emerald-400'
-                  : 'text-emerald-400'
+                  ? "text-emerald-400"
+                  : "text-emerald-400"
         }`}
-        style={isLiveRunning && !isPending && !showMockData && !isSyncMethod ? {
-          color: accentColor,
-        } : undefined}
+        style={isLiveRunning && !isPending && !showMockData && !isSyncMethod ? { color: accentColor } : undefined}
       >
-        {showMockData ? '--' : isPending ? '...' : `${animatedDuration}ms`}
+        {showMockData ? "--" : isPending ? "..." : `${animatedDuration}ms`}
       </span>
     </div>
   );
 }
 
-export function ResultCard({ 
-  result, 
-  isRunning, 
+export function ResultCard({
+  result,
+  isRunning,
   isPreparing = false,
   isWaitingForWallet = false,
   isConnectedWallet = false,
   syncMode,
-  partialResult, 
+  partialResult,
   elapsedTime = 0,
-  chainConfig,
+  chain,
 }: ResultCardProps) {
+  const ui = getChainUI(chain.id);
+  const blockExplorerUrl = chain.blockExplorers?.default?.url || "";
+
   const title = "Transaction Result";
-  const subtitle = syncMode 
-    ? "Using eth_sendRawTransactionSync" 
+  const subtitle = syncMode
+    ? "Using eth_sendRawTransactionSync"
     : isConnectedWallet
       ? "Measuring time from wallet send to confirmation"
       : "Using sendTransaction + waitForTransactionReceipt";
@@ -104,14 +112,16 @@ export function ResultCard({
   const totalDuration = displayCalls.reduce((sum, call) => sum + call.duration, 0);
   const showMockData = !result && !isRunning && !partialResult && !isPreparing;
   const displayElapsedTime = isLiveRunning ? elapsedTime : result?.duration;
-  
+
   // Use animated counter for the total duration and RPC time
   const animatedDuration = useAnimatedCounter(displayElapsedTime || 0, APP_CONFIG.COUNTER_ANIMATION_DURATION);
 
   return (
-    <div className={`w-full flex flex-col min-h-[500px] p-6 bg-zinc-900/50 border border-zinc-800 rounded-lg transition-all duration-500 ${
-      showMockData ? 'animate-fade-in' : ''
-    }`}>
+    <div
+      className={`w-full flex flex-col min-h-[500px] p-6 bg-zinc-900/50 border border-zinc-800 rounded-lg transition-all duration-500 ${
+        showMockData ? "animate-fade-in" : ""
+      }`}
+    >
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
@@ -126,26 +136,21 @@ export function ResultCard({
         {result && (
           <span
             className={`px-2 py-1 rounded text-xs font-semibold ${
-              result.status === "success"
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "bg-red-500/20 text-red-400"
+              result.status === "success" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
             }`}
           >
             {result.status === "success" ? "✓ Success" : "✗ Error"}
           </span>
         )}
         {isLiveRunning && (
-          <span 
+          <span
             className="px-2 py-1 rounded text-xs font-semibold flex items-center gap-1"
             style={{
-              backgroundColor: `${chainConfig.accentColor}20`,
-              color: chainConfig.accentColor,
+              backgroundColor: `${ui.accentColor}20`,
+              color: ui.accentColor,
             }}
           >
-            <div 
-              className="w-2 h-2 rounded-full animate-pulse" 
-              style={{ backgroundColor: chainConfig.accentColor }}
-            />
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: ui.accentColor }} />
             Live
           </span>
         )}
@@ -186,12 +191,8 @@ export function ResultCard({
             <p className="text-sm text-zinc-400 mb-2">RPC Call Breakdown</p>
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <div className="w-10 h-10 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-yellow-400 font-medium">
-                Waiting for wallet confirmation...
-              </p>
-              <p className="text-xs text-zinc-500">
-                Timer starts after you confirm the transaction
-              </p>
+              <p className="text-sm text-yellow-400 font-medium">Waiting for wallet confirmation...</p>
+              <p className="text-xs text-zinc-500">Timer starts after you confirm the transaction</p>
             </div>
           </div>
         </>
@@ -200,15 +201,15 @@ export function ResultCard({
       {/* Show mock data, real results, or live running data */}
       {!isPreparing && !isWaitingForWallet && (result || showMockData || isLiveRunning) && (
         <>
-          {(showMockData || result?.status === "success" || isLiveRunning) ? (
+          {showMockData || result?.status === "success" || isLiveRunning ? (
             <>
               <div className="mb-3">
                 <p className="text-sm text-zinc-400 mb-1">Total Duration</p>
-                <p 
-                  className={`text-2xl font-bold font-mono ${showMockData ? 'text-zinc-400' : isLiveRunning ? 'text-yellow-400' : 'text-emerald-400'}`}
-                  style={isLiveRunning ? { color: chainConfig.accentColor } : undefined}
+                <p
+                  className={`text-2xl font-bold font-mono ${showMockData ? "text-zinc-400" : isLiveRunning ? "text-yellow-400" : "text-emerald-400"}`}
+                  style={isLiveRunning ? { color: ui.accentColor } : undefined}
                 >
-                  {showMockData ? '--' : animatedDuration}ms
+                  {showMockData ? "--" : animatedDuration}ms
                 </p>
               </div>
 
@@ -216,12 +217,12 @@ export function ResultCard({
                 <p className="text-sm text-zinc-400 mb-2">RPC Call Breakdown</p>
                 <div className="space-y-1 overflow-y-auto">
                   {displayCalls.map((call, index) => (
-                    <RPCCallRow 
-                      key={`${call.method}-${index}`} 
-                      call={call} 
+                    <RPCCallRow
+                      key={`${call.method}-${index}`}
+                      call={call}
                       showMockData={showMockData}
                       isLiveRunning={!!isLiveRunning}
-                      accentColor={chainConfig.accentColor}
+                      accentColor={ui.accentColor}
                     />
                   ))}
                 </div>
@@ -231,22 +232,22 @@ export function ResultCard({
               <div className="py-2 border-t border-zinc-700/50">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400">Total RPC Calls</span>
-                  <span className={`font-mono ${showMockData ? 'text-zinc-500' : 'text-zinc-300'}`}>
+                  <span className={`font-mono ${showMockData ? "text-zinc-500" : "text-zinc-300"}`}>
                     {displayCalls.length}
                   </span>
                 </div>
               </div>
 
               {/* Transaction Hash - always at bottom */}
-              {!showMockData && result && (
+              {!showMockData && result && blockExplorerUrl && (
                 <div className="pt-3 border-t border-zinc-700 flex items-center gap-2">
                   <span className="text-xs text-zinc-400">Transaction Hash</span>
                   <a
-                    href={`${chainConfig.blockExplorerUrl}/tx/${result.txHash}`}
+                    href={`${blockExplorerUrl}/tx/${result.txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-white hover:text-emerald-300 font-mono transition-colors group"
-                    style={{ '--hover-color': chainConfig.accentColor } as React.CSSProperties}
+                    style={{ "--hover-color": ui.accentColor } as React.CSSProperties}
                   >
                     <span>{truncateHash(result.txHash)}</span>
                     <svg
