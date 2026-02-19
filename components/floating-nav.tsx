@@ -15,8 +15,12 @@ export function FloatingNav() {
             height={22}
             className="opacity-90"
           />
-          <span className="font-mono text-sm text-neutral-400">
-            <span className="text-neutral-600">~/</span>abs
+          <span
+            className="inline-block h-2 w-2 rounded-full bg-accent"
+            style={{ boxShadow: "0 0 6px rgba(0, 232, 123, 0.6), 0 0 12px rgba(0, 232, 123, 0.25)" }}
+          />
+          <span className="text-xs text-neutral-400">
+            Connected to Abstract Testnet
           </span>
         </Link>
 

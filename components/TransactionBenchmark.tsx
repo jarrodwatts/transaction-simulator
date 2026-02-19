@@ -147,8 +147,8 @@ export function TransactionBenchmark() {
 
   return (
     <div className="w-full pb-8">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr]">
-        <div className="flex flex-col gap-5 lg:sticky lg:top-28 lg:self-start">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[300px_1fr] lg:gap-6">
+        <div className="contents lg:sticky lg:top-28 lg:flex lg:flex-col lg:gap-5 lg:self-start">
           <div className="animate-enter-left" style={{ animationDelay: "0.1s" }}>
             <h1 className="text-2xl font-semibold tracking-tight text-white">
               Transaction Simulator
@@ -169,7 +169,7 @@ export function TransactionBenchmark() {
             />
           </div>
 
-          <div className="animate-enter-left" style={{ animationDelay: "0.3s" }}>
+          <div className="order-1 animate-enter-left lg:order-none" style={{ animationDelay: "0.3s" }}>
             <BlockTimeCard />
           </div>
 
@@ -177,7 +177,7 @@ export function TransactionBenchmark() {
             href="https://docs.abs.xyz"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block animate-enter-left overflow-hidden rounded-xl border border-accent/20 p-4 backdrop-blur-md transition-colors hover:border-accent/40"
+            className="group relative order-1 block animate-enter-left overflow-hidden rounded-xl border border-accent/20 p-4 backdrop-blur-md transition-colors hover:border-accent/40 lg:order-none"
             style={{ animationDelay: "0.4s" }}
           >
             <div className="absolute inset-0 -z-10 opacity-0 transition-opacity group-hover:opacity-100" style={{ background: "radial-gradient(ellipse 120% 80% at 50% 120%, rgba(0, 232, 123, 0.06) 0%, transparent 70%)" }} />
