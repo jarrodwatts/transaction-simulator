@@ -1,10 +1,10 @@
-![Transaction Simulator](public/txsim.png)
+![Transaction Simulator](./public/txsim.png)
 
 # Transaction Simulator
 
 Visualize every RPC call that happens when you send a transaction on [Abstract](https://abs.xyz). See exactly what goes over the wire, how long each call takes, and how different optimizations affect total transaction time.
 
-**[Try it live](https://abs.txsim.com)**
+**[Try it live](https://txsim.com)**
 
 ## What it does
 
