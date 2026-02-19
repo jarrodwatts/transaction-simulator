@@ -17,9 +17,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://txsim.com"),
   title: APP_METADATA.title,
   description: APP_METADATA.description,
   openGraph: {
+    title: APP_METADATA.title,
+    description: APP_METADATA.description,
+    siteName: APP_METADATA.title,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
     title: APP_METADATA.title,
     description: APP_METADATA.description,
   },
