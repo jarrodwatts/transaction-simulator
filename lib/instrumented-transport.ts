@@ -29,7 +29,9 @@ export function createInstrumentedTransport(
         // Don't log it since no actual RPC call is made
         if (request.method === "eth_chainId" && prefetchChainId && cachedChainId) {
           // Return in hex format as viem expects
-          return `0x${cachedChainId.toString(16)}` as any;
+          return `0x${cachedChainId.toString(16)}` as Awaited<
+            ReturnType<typeof transport.request>
+          >;
         }
         
         // Notify that RPC call is starting

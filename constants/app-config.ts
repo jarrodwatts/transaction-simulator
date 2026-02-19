@@ -1,21 +1,6 @@
-/**
- * Application-wide configuration constants
- */
-
 export const APP_CONFIG = {
-  /**
-   * URL for the block explorer to view transactions
-   */
   BLOCK_EXPLORER_URL: "https://sepolia.abscan.org",
-  
-  /**
-   * Interval for updating elapsed time during benchmark (ms)
-   */
   TIMER_UPDATE_INTERVAL: 50,
-  
-  /**
-   * Duration for animated counter transitions (ms)
-   */
   COUNTER_ANIMATION_DURATION: 100,
 } as const;
 

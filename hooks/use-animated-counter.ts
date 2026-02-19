@@ -8,14 +8,15 @@ export function useAnimatedCounter(
   const rafRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number | undefined>(undefined);
   const startValueRef = useRef(targetValue);
+  const prevTargetRef = useRef(targetValue);
 
   useEffect(() => {
-    // If target hasn't changed, don't animate
-    if (displayValue === targetValue) {
+    if (prevTargetRef.current === targetValue) {
       return;
     }
 
-    startValueRef.current = displayValue;
+    startValueRef.current = prevTargetRef.current;
+    prevTargetRef.current = targetValue;
     startTimeRef.current = Date.now();
 
     const animate = () => {
@@ -23,9 +24,8 @@ export function useAnimatedCounter(
       const elapsed = now - (startTimeRef.current || now);
       const progress = Math.min(elapsed / duration, 1);
 
-      // Ease out cubic
       const easeProgress = 1 - Math.pow(1 - progress, 3);
-      
+
       const current = Math.round(
         startValueRef.current + (targetValue - startValueRef.current) * easeProgress
       );
@@ -50,4 +50,3 @@ export function useAnimatedCounter(
 
   return displayValue;
 }
-

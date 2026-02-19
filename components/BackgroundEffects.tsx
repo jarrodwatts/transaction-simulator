@@ -1,12 +1,15 @@
 export function BackgroundEffects() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
+      <div className="dot-grid absolute inset-0" />
+
       <div
         className="absolute inset-0"
         style={{
           background: [
-            "radial-gradient(ellipse 80% 60% at 20% 20%, oklch(0.14 0.01 30) 0%, transparent 70%)",
-            "radial-gradient(ellipse 60% 80% at 80% 80%, oklch(0.12 0.008 30) 0%, transparent 65%)",
+            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 232, 123, 0.04) 0%, transparent 60%)",
+            "radial-gradient(ellipse 60% 60% at 20% 30%, oklch(0.16 0.015 160) 0%, transparent 70%)",
+            "radial-gradient(ellipse 50% 70% at 80% 70%, oklch(0.13 0.01 30) 0%, transparent 65%)",
           ].join(", "),
         }}
       />
@@ -22,7 +25,7 @@ export function BackgroundEffects() {
         </filter>
       </svg>
       <div
-        className="absolute inset-0 opacity-[0.045]"
+        className="absolute inset-0 opacity-[0.05]"
         style={{ filter: "url(#grain)", mixBlendMode: "overlay" }}
       />
     </div>

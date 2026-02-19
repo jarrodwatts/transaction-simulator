@@ -6,11 +6,12 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-border: var(--border);
   --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-muted: var(--accent-muted);
 
   --color-neutral-100: oklch(97% 0.006 30);
   --color-neutral-200: oklch(92.2% 0.006 30);
@@ -71,6 +72,8 @@
   --foreground: #fff;
   --border: oklch(0.22 0.01 30);
   --muted-foreground: oklch(0.58 0.008 30);
+  --accent: #00E87B;
+  --accent-muted: #00E87B33;
 }
 
 @layer base {
@@ -96,6 +99,8 @@
     font-family: var(--font-sans);
   }
 }
+
+/* Entrance animations */
 
 @keyframes fade-in-up {
   from {
@@ -127,4 +132,102 @@
 
 .animate-slide-in {
   animation: slide-in 0.4s ease-out;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-enter-left {
+  opacity: 0;
+  animation: enter-left 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-enter-right {
+  opacity: 0;
+  animation: enter-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Shimmer for empty state */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-bar {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Waterfall bar grow animation */
+
+@keyframes grow-width {
+  from {
+    width: 0;
+  }
+}
+
+/* Dot grid background */
+
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.glass-card {
+  background: linear-gradient(137deg, rgba(17, 18, 20, 0.75) 5%, rgba(12, 13, 15, 0.9) 76%);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes chain-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.chain-scroll {
+  animation: chain-scroll 1.2s linear infinite;
 }

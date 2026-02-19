@@ -4,11 +4,12 @@ import { useState, useRef } from "react";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { RPCCallLog } from "@/lib/instrumented-transport";
 import { createBenchmarkClients } from "@/lib/benchmark-clients";
-import { runTransaction, TransactionOptions } from "@/lib/benchmark-runner";
-import { BenchmarkResult } from "@/types/benchmark";
+import { runTransaction } from "@/lib/benchmark-runner";
+import { BenchmarkResult, TransactionOptions } from "@/types/benchmark";
 import { PartialResult } from "@/types/partial-result";
 import { ResultCard } from "./ResultCard";
 import { SettingsControlPanel } from "./PrefetchControlPanel";
+import { BlockTimeCard } from "./block-time-card";
 import { APP_CONFIG } from "@/constants/app-config";
 
 export function TransactionBenchmark() {
@@ -146,35 +147,64 @@ export function TransactionBenchmark() {
 
   return (
     <div className="w-full pb-8">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
-        <div className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
-          <div>
-            <h1 className="text-base font-semibold tracking-tight text-white">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr]">
+        <div className="flex flex-col gap-5 lg:sticky lg:top-28 lg:self-start">
+          <div className="animate-enter-left" style={{ animationDelay: "0.1s" }}>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">
               Transaction Simulator
             </h1>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1.5 text-xs text-neutral-500">
               Explore the RPC calls when sending a transaction on Abstract
             </p>
           </div>
 
-          <SettingsControlPanel
-            options={options}
-            onChange={setOptions}
-            disabled={isRunning}
-            onRun={runBenchmark}
-            isRunning={isRunning || isPreparing}
-            buttonLabel={buttonLabel}
-          />
+          <div className="animate-enter-left" style={{ animationDelay: "0.2s" }}>
+            <SettingsControlPanel
+              options={options}
+              onChange={setOptions}
+              disabled={isRunning}
+              onRun={runBenchmark}
+              isRunning={isRunning || isPreparing}
+              buttonLabel={buttonLabel}
+            />
+          </div>
+
+          <div className="animate-enter-left" style={{ animationDelay: "0.3s" }}>
+            <BlockTimeCard />
+          </div>
+
+          <a
+            href="https://docs.abs.xyz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative block animate-enter-left overflow-hidden rounded-xl border border-accent/20 p-4 backdrop-blur-md transition-colors hover:border-accent/40"
+            style={{ animationDelay: "0.4s" }}
+          >
+            <div className="absolute inset-0 -z-10 opacity-0 transition-opacity group-hover:opacity-100" style={{ background: "radial-gradient(ellipse 120% 80% at 50% 120%, rgba(0, 232, 123, 0.06) 0%, transparent 70%)" }} />
+            <div className="glass-card absolute inset-0 -z-20" />
+            <p className="font-mono text-[11px] uppercase tracking-widest text-accent/40">
+              Start building
+            </p>
+            <p className="mt-1 text-sm text-neutral-300">
+              Build on Abstract
+              <span className="ml-1.5 inline-block transition-transform group-hover:translate-x-0.5">&rarr;</span>
+            </p>
+            <p className="mt-1 text-[11px] text-neutral-600">
+              docs.abs.xyz
+            </p>
+          </a>
         </div>
 
-        <ResultCard
-          result={result}
-          isRunning={isRunning}
-          isPreparing={isPreparing}
-          syncMode={options.syncMode}
-          partialResult={partialResult}
-          elapsedTime={elapsedTime}
-        />
+        <div className="animate-enter-right" style={{ animationDelay: "0.3s" }}>
+          <ResultCard
+            result={result}
+            isRunning={isRunning}
+            isPreparing={isPreparing}
+            syncMode={options.syncMode}
+            partialResult={partialResult}
+            elapsedTime={elapsedTime}
+          />
+        </div>
       </div>
     </div>
   );

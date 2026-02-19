@@ -1,10 +1,5 @@
 import { RPCCallLog } from "@/lib/instrumented-transport";
 
-/**
- * Mock RPC call data for displaying before the first benchmark run
- * These represent typical call patterns for each transaction mode
- */
-
 export const MOCK_ASYNC_CALLS: RPCCallLog[] = [
   { method: "eth_getTransactionCount", startTime: 0, endTime: 473, duration: 473 },
   { method: "eth_getBlockByNumber", startTime: 0, endTime: 239, duration: 239 },
@@ -29,9 +24,6 @@ export const MOCK_SYNC_CALLS: RPCCallLog[] = [
   { method: "eth_sendRawTransactionSync", startTime: 0, endTime: 470, duration: 470 },
 ];
 
-/**
- * Get mock calls based on sync mode
- */
 export function getMockCalls(syncMode: boolean): RPCCallLog[] {
   return syncMode ? MOCK_SYNC_CALLS : MOCK_ASYNC_CALLS;
 }

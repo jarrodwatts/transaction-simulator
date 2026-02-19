@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { BenchmarkResult } from "@/types/benchmark";
 import { PartialResult } from "@/types/partial-result";
 import { RPCCallLog } from "@/lib/instrumented-transport";
@@ -15,16 +16,57 @@ interface ResultCardProps {
   elapsedTime?: number;
 }
 
-function RPCCallRow({
+const WaterfallBar = memo(function WaterfallBar({
+  duration,
+  maxDuration,
+  isPending,
+  isLive,
+}: {
+  duration: number;
+  maxDuration: number;
+  isPending: boolean;
+  isLive: boolean;
+}) {
+  const widthPercent = maxDuration > 0 ? (duration / maxDuration) * 100 : 0;
+  const minWidth = 4;
+  const displayWidth = Math.max(widthPercent, minWidth);
+
+  if (isPending) {
+    return (
+      <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/[0.03]">
+        <div className="shimmer-bar h-full w-full rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/[0.03]">
+      <div
+        className="h-full rounded-full"
+        style={{
+          width: `${displayWidth}%`,
+          background: isLive
+            ? "linear-gradient(90deg, #00E87B, #00E87B88)"
+            : "linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.08))",
+          transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      />
+    </div>
+  );
+});
+
+const RPCCallRow = memo(function RPCCallRow({
   call,
   showMockData,
   isLiveRunning,
   index,
+  maxDuration,
 }: {
   call: RPCCallLog;
   showMockData: boolean;
   isLiveRunning: boolean;
   index: number;
+  maxDuration: number;
 }) {
   const animatedDuration = useAnimatedCounter(
     call.duration,
@@ -34,8 +76,8 @@ function RPCCallRow({
 
   return (
     <div
-      className={`flex items-center justify-between py-[5px] ${
-        showMockData ? "opacity-30" : ""
+      className={`flex flex-col gap-1.5 py-[7px] ${
+        showMockData ? "opacity-20" : ""
       }`}
       style={
         !showMockData && isLiveRunning
@@ -43,32 +85,42 @@ function RPCCallRow({
           : undefined
       }
     >
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-[11px] tabular-nums text-neutral-600">
-          {String(index + 1).padStart(2, "0")}
-        </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[11px] tabular-nums text-accent/40">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span
+            className={`font-mono text-xs ${
+              isPending ? "text-amber-400" : "text-neutral-300"
+            }`}
+          >
+            {call.method}
+          </span>
+        </div>
         <span
-          className={`font-mono text-xs ${
-            isPending ? "text-amber-400" : "text-neutral-300"
+          className={`min-w-[50px] text-right font-mono text-xs tabular-nums ${
+            isPending
+              ? "animate-pulse text-amber-400"
+              : isLiveRunning
+                ? "text-accent"
+                : "text-neutral-500"
           }`}
         >
-          {call.method}
+          {showMockData ? "" : isPending ? "..." : `${animatedDuration}ms`}
         </span>
       </div>
-      <span
-        className={`min-w-[50px] text-right font-mono text-xs tabular-nums ${
-          isPending
-            ? "animate-pulse text-amber-400"
-            : isLiveRunning
-              ? "text-emerald-400"
-              : "text-neutral-500"
-        }`}
-      >
-        {showMockData ? "" : isPending ? "..." : `${animatedDuration}ms`}
-      </span>
+      {!showMockData && (
+        <WaterfallBar
+          duration={call.duration}
+          maxDuration={maxDuration}
+          isPending={isPending}
+          isLive={isLiveRunning}
+        />
+      )}
     </div>
   );
-}
+});
 
 export function ResultCard({
   result,
@@ -88,6 +140,11 @@ export function ResultCard({
   const showMockData = !result && !isRunning && !partialResult && !isPreparing;
   const displayElapsedTime = isLiveRunning ? elapsedTime : result?.duration;
 
+  const maxDuration = useMemo(
+    () => Math.max(...displayCalls.map((c) => c.duration), 1),
+    [displayCalls]
+  );
+
   const animatedDuration = useAnimatedCounter(
     displayElapsedTime || 0,
     APP_CONFIG.COUNTER_ANIMATION_DURATION
@@ -95,17 +152,11 @@ export function ResultCard({
 
   return (
     <div
-      className="flex w-full flex-col rounded-xl border border-white/[0.06] backdrop-blur-md"
-      style={{
-        background:
-          "linear-gradient(137deg, rgba(17, 18, 20, 0.75) 5%, rgba(12, 13, 15, 0.9) 76%)",
-        boxShadow:
-          "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4)",
-      }}
+      className="glass-card flex min-h-[calc(100vh-10rem)] w-full flex-col rounded-xl border border-white/[0.06] backdrop-blur-md"
     >
       <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
         <div className="flex items-center gap-3">
-          <h3 className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+          <h3 className="font-mono text-[11px] uppercase tracking-widest text-accent/60">
             Result
           </h3>
           <span className="font-mono text-[11px] text-neutral-600">
@@ -123,7 +174,7 @@ export function ResultCard({
           <span
             className={`rounded-md px-2 py-0.5 font-mono text-[11px] ${
               result.status === "success"
-                ? "bg-emerald-500/10 text-emerald-400"
+                ? "bg-accent/10 text-accent"
                 : "bg-red-500/10 text-red-400"
             }`}
           >
@@ -149,24 +200,28 @@ export function ResultCard({
       {!isPreparing && (result || showMockData || isLiveRunning) && (
         <>
           {showMockData || result?.status === "success" || isLiveRunning ? (
-            <div className="flex flex-col">
+            <div className="flex flex-1 flex-col">
               <div className="flex items-baseline gap-3 border-b border-white/[0.06] px-5 py-4">
-                <p
-                  className={`font-mono text-3xl font-bold tabular-nums ${
-                    showMockData
-                      ? "text-neutral-700"
-                      : isLiveRunning
-                        ? "text-amber-400"
-                        : "text-white"
-                  }`}
-                >
-                  {showMockData ? "--" : animatedDuration}
-                </p>
-                <span className="text-sm text-neutral-600">ms</span>
-                {!showMockData && result && (
-                  <span className="ml-auto font-mono text-xs text-neutral-500">
-                    {displayCalls.length} calls
+                {showMockData ? (
+                  <span className="font-mono text-3xl font-bold text-neutral-700">
+                    &mdash;
                   </span>
+                ) : (
+                  <>
+                    <p
+                      className={`font-mono text-3xl font-bold tabular-nums ${
+                        isLiveRunning ? "text-amber-400" : "text-white"
+                      }`}
+                    >
+                      {animatedDuration}
+                    </p>
+                    <span className="text-sm text-neutral-600">ms</span>
+                    {result && (
+                      <span className="ml-auto font-mono text-xs text-neutral-500">
+                        {displayCalls.length} calls
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -187,19 +242,28 @@ export function ResultCard({
                       showMockData={showMockData}
                       isLiveRunning={!!isLiveRunning}
                       index={index}
+                      maxDuration={maxDuration}
                     />
                   ))}
                 </div>
               </div>
 
+              {showMockData && (
+                <div className="flex flex-1 items-end justify-center px-5 pb-6 pt-4">
+                  <p className="font-mono text-[11px] text-neutral-600">
+                    Run a transaction to see the RPC trace
+                  </p>
+                </div>
+              )}
+
               {!showMockData && result && (
-                <div className="flex items-center gap-2 border-t border-white/[0.06] px-5 py-3">
+                <div className="mt-auto flex items-center gap-2 border-t border-white/[0.06] px-5 py-3">
                   <span className="text-xs text-neutral-500">Tx Hash</span>
                   <a
                     href={`${APP_CONFIG.BLOCK_EXPLORER_URL}/tx/${result.txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-mono text-xs text-neutral-400 transition-colors hover:text-white"
+                    className="font-mono text-xs text-neutral-400 transition-colors hover:text-accent"
                   >
                     {truncateHash(result.txHash)} ↗
                   </a>
