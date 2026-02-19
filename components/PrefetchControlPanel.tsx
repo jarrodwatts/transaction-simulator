@@ -2,7 +2,6 @@
 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Info } from "lucide-react";
 
 export interface TransactionOptions {
   nonce: boolean;
@@ -15,109 +14,74 @@ interface SettingsControlPanelProps {
   options: TransactionOptions;
   onChange: (options: TransactionOptions) => void;
   disabled?: boolean;
+  onRun: () => void;
+  isRunning: boolean;
+  buttonLabel: string;
 }
 
-export function SettingsControlPanel({ 
-  options, 
-  onChange, 
-  disabled = false 
+const TOGGLE_ITEMS: { key: keyof TransactionOptions; label: string }[] = [
+  { key: "syncMode", label: "Sync Mode" },
+  { key: "nonce", label: "Pre-fetch Nonce" },
+  { key: "gasParams", label: "Pre-fetch Gas" },
+  { key: "chainId", label: "Pre-fetch Chain ID" },
+];
+
+export function SettingsControlPanel({
+  options,
+  onChange,
+  disabled = false,
+  onRun,
+  isRunning,
+  buttonLabel,
 }: SettingsControlPanelProps) {
   const handleToggle = (key: keyof TransactionOptions) => {
     onChange({ ...options, [key]: !options[key] });
   };
 
   return (
-    <div className="w-full p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg">
-      <div className="flex flex-col gap-4">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-white">Transaction Settings</h3>
-          <div className="group relative">
-            <Info className="w-3.5 h-3.5 text-zinc-500 cursor-help hover:text-zinc-400 transition-colors" />
-            <div className="absolute left-0 top-6 w-80 p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none z-10 shadow-xl">
-              <p className="mb-2 font-semibold text-white">How does this work?</p>
-              <p className="mb-2">
-                Toggle settings to see how different configurations affect the RPC calls made during a transaction.
-              </p>
-              <p className="mb-2">
-                <span className="text-emerald-400 font-semibold">Pre-fetch options:</span> When enabled, parameters are fetched before sending, reducing RPC calls during execution.
-              </p>
-              <p>
-                <span className="text-emerald-400 font-semibold">Sync Mode:</span> Uses <code className="bg-zinc-700 px-1 rounded">eth_sendRawTransactionSync</code> which waits for inclusion instead of polling.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Toggle Controls */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          {/* Sync Mode Toggle */}
-          <div className="flex items-center gap-2">
-            <Label 
-              htmlFor="sync-toggle" 
-              className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
+    <div
+      className="w-full rounded-xl border border-white/[0.06] p-4 backdrop-blur-md"
+      style={{
+        background:
+          "linear-gradient(137deg, rgba(17, 18, 20, 0.75) 5%, rgba(12, 13, 15, 0.9) 76%)",
+        boxShadow:
+          "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4)",
+      }}
+    >
+      <h3 className="mb-3 font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+        Settings
+      </h3>
+
+      <div className="flex flex-col gap-3">
+        {TOGGLE_ITEMS.map(({ key, label }) => (
+          <div key={key} className="flex items-center justify-between">
+            <Label
+              htmlFor={`${key}-toggle`}
+              className="cursor-pointer text-xs text-neutral-400"
             >
-              Sync Mode
+              {label}
             </Label>
-            <Switch 
-              id="sync-toggle"
-              checked={options.syncMode}
-              onCheckedChange={() => handleToggle("syncMode")}
+            <Switch
+              id={`${key}-toggle`}
+              checked={options[key]}
+              onCheckedChange={() => handleToggle(key)}
               disabled={disabled}
             />
           </div>
-
-          <div className="hidden sm:block w-px h-4 bg-zinc-700" />
-
-          {/* Nonce Toggle */}
-          <div className="flex items-center gap-2">
-            <Label 
-              htmlFor="nonce-toggle" 
-              className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
-            >
-              Pre-fetch Nonce
-            </Label>
-            <Switch 
-              id="nonce-toggle"
-              checked={options.nonce}
-              onCheckedChange={() => handleToggle("nonce")}
-              disabled={disabled}
-            />
-          </div>
-
-          {/* Gas Parameters Toggle */}
-          <div className="flex items-center gap-2">
-            <Label 
-              htmlFor="gas-toggle" 
-              className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
-            >
-              Pre-fetch Gas
-            </Label>
-            <Switch 
-              id="gas-toggle"
-              checked={options.gasParams}
-              onCheckedChange={() => handleToggle("gasParams")}
-              disabled={disabled}
-            />
-          </div>
-
-          {/* Chain ID Toggle */}
-          <div className="flex items-center gap-2">
-            <Label 
-              htmlFor="chain-toggle" 
-              className="text-xs text-zinc-400 cursor-pointer whitespace-nowrap"
-            >
-              Pre-fetch Chain ID
-            </Label>
-            <Switch 
-              id="chain-toggle"
-              checked={options.chainId}
-              onCheckedChange={() => handleToggle("chainId")}
-              disabled={disabled}
-            />
-          </div>
-        </div>
+        ))}
       </div>
+
+      <button
+        onClick={onRun}
+        disabled={isRunning}
+        className="mt-4 w-full rounded-lg bg-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          boxShadow:
+            "0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 12px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0.4px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0.4px 0 #fff",
+        }}
+      >
+        {buttonLabel}
+      </button>
     </div>
   );
 }
